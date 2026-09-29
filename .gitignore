@@ -1,0 +1,53 @@
+# ─── 依赖 ───────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+
+# ─── 构建产物 ───────────────────────────────────────────
+dist/
+build/
+*.tsbuildinfo
+.vite/
+
+# ─── 运行时数据（动态数据不入库） ────────────────────────
+# 注意：data/packs/ 与 data/knowledge/ 是随仓库分发的数据资产，
+# 不在此忽略；仅忽略运行时生成的内容。
+data/cache/
+data/sessions/
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# ─── 密钥与环境变量 ─────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── 日志与临时文件 ─────────────────────────────────────
+*.log
+npm-debug.log*
+pnpm-debug.log*
+logs/
+tmp/
+temp/
+
+# ─── 测试与覆盖率 ───────────────────────────────────────
+coverage/
+test-results/
+playwright-report/
+.nyc_output/
+
+# ─── 编辑器与系统 ───────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── 本地编排工具状态 ───────────────────────────────────
+.agent-teams/
+.hermes/
