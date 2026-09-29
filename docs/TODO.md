@@ -352,3 +352,38 @@
 | **D-11** | **是否提供 MCP 服务形态** | ⬜ **待定**（不影响当前批次） |
 
 > 待定项不阻塞批次 0 与批次 1。相关任务已给出"先用可替换实现并固定行为"的推进方式。
+
+---
+
+## 10. 看板任务 ID 映射
+
+任务已创建到 Hermes Kanban 看板 **`yundingzhiyi`**，工作区模式为 `dir:`（直接以仓库目录为工作区）。
+
+| 任务 | 看板 ID | 负责人 | 依赖 | 创建时间 |
+|---|---|---|---|---|
+| 0-1 契约冻结 | `t_e5ac8b02` | backend-developer | — | 2026-09-29 |
+| 0-2 工程骨架 | `t_82ac9bd7` | backend-developer | 0-1 | 2026-09-29 |
+| 0-3 数据完整性校验工具 | `t_d4a1a099` | tdd-guide | 0-2 | 2026-09-29 |
+| 0-4 CI 流水线 | `t_c245f8c1` | backend-developer | 0-2 | 2026-09-29 |
+
+### 常用命令
+
+```bash
+hermes kanban --board yundingzhiyi list                 # 全部任务
+hermes kanban --board yundingzhiyi list --status done   # 已完成
+hermes kanban --board yundingzhiyi stats                # 状态与负责人汇总
+hermes kanban --board yundingzhiyi show <id>            # 详情、评论、审计轨迹
+```
+
+### 批次 1 及之后
+
+批次 1（数据线 / 后端线 / 前端线）与批次 2、3 的任务**尚未创建到看板**，将在批次 0 完成后创建——原因是其中的前端视觉规格、阵容基线格式等需用批次 0 产出的真实数据补齐（见 §9 待定项 D-08 / D-09）。
+
+### 重建方式
+
+任务卡正文内联在 `scripts/provision-board.mjs` 中，该脚本是任务卡的可版本化副本，且具备幂等保护（看板非空时拒绝重复创建）。
+
+```bash
+node scripts/provision-board.mjs --dry-run   # 预览
+node scripts/provision-board.mjs             # 创建
+```

@@ -201,11 +201,26 @@ yundingzhiyi/
 
 ## 8. 项目状态
 
-项目处于**设计阶段，尚未开始编码**。
+项目**已进入编码阶段**。
 
 - 文档体系已建立
-- 数据源已完成可行性验证
+- 数据源已完成可行性验证（发现 3 个静默失败陷阱，见 §2）
 - 技术选型已确定
-- **下一项工作：契约冻结（任务 0-1）**
+- **批次 0 的四个任务已创建到看板，当前进行中：契约冻结（0-1）**
 
-当前可直接推进的任务见 [TODO.md](TODO.md)。
+### 看板
+
+任务通过 Hermes Kanban 管理，看板 slug 为 `yundingzhiyi`：
+
+```bash
+hermes kanban --board yundingzhiyi list              # 全部任务
+hermes kanban --board yundingzhiyi list --status done # 已完成
+hermes kanban --board yundingzhiyi stats             # 汇总统计
+hermes kanban --board yundingzhiyi show <id>         # 单任务详情与审计轨迹
+```
+
+任务与文档的对应关系见 [docs/TODO.md](docs/TODO.md)，其中记录了每项任务在看板中的 ID。
+
+### 工作区约束
+
+看板任务使用 `dir:` 工作区模式，**直接以仓库目录为工作区**（不创建副本）。执行者必须确认 `pwd` 为仓库根目录后再动手。
