@@ -94,25 +94,53 @@
 
 ---
 
+## 文档
+
+每个环节都有对应的设计文档。**接手任何工作前，先读 AGENTS.md。**
+
+| 文档 | 内容 | 何时读 |
+|---|---|---|
+| [**AGENTS.md**](AGENTS.md) | 入口：核心原则、数据陷阱、硬约束 | **任何工作前** |
+| [PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) | 项目整体说明、目标用户、非目标 | 了解背景 |
+| [DESIGN.md](docs/DESIGN.md) | 领域建模、推导机制、推理流水线、幻觉闸门 | 涉及设计决策 |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 数据模型、数据流、版本指纹、API 路由 | **写代码前** |
+| [COMPONENT-API.md](docs/COMPONENT-API.md) | 契约层类型定义与 API 签名 | 涉及接口 |
+| [DEVELOPMENT.md](docs/DEVELOPMENT.md) | 命令、编码规范、提交规范、验证清单 | **开工前** |
+| [TODO.md](docs/TODO.md) | 任务清单、优先级、任务卡、决策记录 | 领取工作 |
+| [TECH-STACK.md](docs/TECH-STACK.md) | 技术选型与决策理由 | 质疑选型 |
+| [ROADMAP.md](docs/ROADMAP.md) | 阶段划分与里程碑 | 了解全局 |
+| [USER-GUIDE.md](docs/USER-GUIDE.md) | 面向使用者的功能说明 | 确认需求边界 |
+| [CREDITS.md](CREDITS.md) | 致谢、参考项目与许可边界 | **引入外部代码前** |
+
+文档之间的关系：
+
+```
+AGENTS.md（入口 · 硬约束）
+    │
+    ├─→ PROJECT-OVERVIEW   项目是什么
+    ├─→ DESIGN             为什么这样设计
+    ├─→ ARCHITECTURE       系统怎么构成
+    │      └─→ COMPONENT-API   接口长什么样
+    ├─→ DEVELOPMENT        怎么开工
+    │      └─→ TODO            做什么
+    └─→ TECH-STACK / ROADMAP / USER-GUIDE / CREDITS
+```
+
 ## 当前进展
 
 **项目处于设计阶段，尚未开始编码。**
 
-已完成：
-
-- [x] 数据源可行性验证（Community Dragon 接口可用性与字段陷阱）
-- [x] 赛季定位与版本指纹方案
-- [x] 技术选型
-- [x] 架构设计与任务拆解边界
-
-设计文档见 [`docs/`](docs/)：
-
-| 文档 | 内容 |
+| 项 | 状态 |
 |---|---|
-| [DESIGN.md](docs/DESIGN.md) | 领域建模、推理流水线、幻觉闸门、数据层设计、界面设计 |
-| [TECH-STACK.md](docs/TECH-STACK.md) | 技术选型与决策理由 |
-| [ROADMAP.md](docs/ROADMAP.md) | 分阶段路线图 |
-| [CREDITS.md](CREDITS.md) | 致谢与参考项目 |
+| 数据源可行性验证 | ✅ 完成（发现 3 个静默失败陷阱） |
+| 赛季定位与版本指纹方案 | ✅ 完成 |
+| 技术选型 | ✅ 完成 |
+| 架构设计与文档体系 | ✅ 完成 |
+| **契约冻结** | ⬜ **下一项工作** |
+| 数据层 / 后端 / 前端实现 | ⬜ 未开始 |
+| 语言模型接入 | ⬜ 未开始 |
+
+任务清单见 [docs/TODO.md](docs/TODO.md)。
 
 ---
 
