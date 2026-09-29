@@ -1,0 +1,24 @@
+{
+  "name": "@yundingzhiyi/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "云顶之弈决策助手 - 契约层（前后端共享的类型定义）。本包是只读契约，不包含运行时实现。",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
