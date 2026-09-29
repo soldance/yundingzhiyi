@@ -51,3 +51,4 @@ desktop.ini
 # ─── 本地编排工具状态 ───────────────────────────────────
 .agent-teams/
 .hermes/
+.dispatch-logs/

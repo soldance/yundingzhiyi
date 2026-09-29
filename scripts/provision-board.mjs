@@ -54,6 +54,22 @@ const CARDS = [
     assignee: "backend-developer",
     priority: 1,
     parents: [],
+    gate: [
+      "test -s packages/shared/package.json",
+      "test -s packages/shared/tsconfig.json",
+      "test -s packages/shared/src/entities.ts",
+      "test -s packages/shared/src/api.ts",
+      "test -s packages/shared/src/constants.ts",
+      "test -s packages/shared/src/index.ts",
+      "! grep -rq \"enum \" packages/shared/src",
+      "! grep -rq \"namespace \" packages/shared/src",
+      "grep -q \"VersionFingerprint\" packages/shared/src/entities.ts",
+      "grep -q \"Champion\" packages/shared/src/entities.ts",
+      "grep -q \"GameState\" packages/shared/src/entities.ts",
+      "grep -q \"ChatEvent\" packages/shared/src/api.ts",
+      "grep -q \"StructuredResult\" packages/shared/src/api.ts",
+      "grep -q \"COST_COLORS\" packages/shared/src/constants.ts",
+    ],
     body: `## 目标
 
 把 \`docs/COMPONENT-API.md\` 中已冻结的类型定义，1:1 落成可编译的 TypeScript 代码，作为全部并行工作的唯一契约真源。
@@ -171,6 +187,18 @@ const CARDS = [
     assignee: "backend-developer",
     priority: 2,
     parents: ["0-1"],
+    gate: [
+      "test -s package.json",
+      "test -s pnpm-workspace.yaml",
+      "test -s tsconfig.base.json",
+      "test -s packages/server/package.json",
+      "test -s packages/server/src/index.ts",
+      "test -s packages/server/src/app.ts",
+      "test -s packages/server/src/routes/health.ts",
+      "grep -q \"@hono/node-server\" packages/server/package.json",
+      "grep -q \"dev:server\" package.json",
+      "grep -q \"typecheck\" package.json",
+    ],
     body: `## 目标
 
 建立可运行的 pnpm monorepo 骨架，使后端能启动并响应健康检查。
@@ -278,6 +306,13 @@ lint           代码检查（可用占位）
     assignee: "tdd-guide",
     priority: 3,
     parents: ["0-2"],
+    gate: [
+      "test -s scripts/verify.ts",
+      "test -s packages/data/package.json",
+      "test -s packages/data/src/validate/verifyPack.ts",
+      "test -s packages/data/src/validate/verifyPack.test.ts",
+      "grep -q '\"verify\"' package.json",
+    ],
     body: `## 目标
 
 实现独立的数据完整性校验器，供后续所有数据类任务复用，并作为 CI 的一项检查。
@@ -378,6 +413,13 @@ lint           代码检查（可用占位）
     assignee: "backend-developer",
     priority: 4,
     parents: ["0-2"],
+    gate: [
+      "test -s .github/workflows/ci.yml",
+      "grep -q \"name:\" .github/workflows/ci.yml",
+      "! grep -q \"pnpm sync\" .github/workflows/ci.yml",
+      "grep -q \"typecheck\" .github/workflows/ci.yml",
+      "grep -q \"verify\" .github/workflows/ci.yml",
+    ],
     body: `## 目标
 
 建立 GitHub Actions 流水线，使契约一致性、类型正确性、测试与数据完整性在每次推送时被自动检查。
@@ -469,32 +511,62 @@ lint           代码检查（可用占位）
 // 执行
 // ─────────────────────────────────────────────────────────────
 
+/** 解析 `hermes kanban list --json` 的输出；返回状态非 archived 的任务数 */
+function countActiveTasks(stdout) {
+  const text = (stdout ?? "").trim();
+  if (!text) return 0;
+  const start = text.search(/[[{]/);
+  if (start < 0) return 0;
+  const json = text.slice(start).split("\n").filter((l) => !/^[a-zA-Z#]/.test(l.trim())).join("\n");
+  try {
+    const parsed = JSON.parse(json);
+    const items = Array.isArray(parsed) ? parsed : (parsed.tasks ?? []);
+    return items.filter((t) => t?.status !== "archived").length;
+  } catch {
+    // 解析不了就保守处理：只要非空即视为有任务
+    return text.length > 2 ? 1 : 0;
+  }
+}
+
+/**
+ * 组装任务正文：在正文末尾追加机读的「验收命令」段。
+ * 该段是派单脚本产物闸门的数据源，格式必须稳定（每行 `- <命令>`）。
+ */
+function buildBody(card) {
+  const gateBlock = (card.gate ?? []).length
+    ? `\n\n---\n\n## 验收命令\n\n`
+      + `> 以下命令由派单脚本在任务结束后自动执行。**全部通过才算完成**，失败将把任务置为 blocked。\n`
+      + `> 你也可以自行运行它们来提前确认结果。\n\n`
+      + card.gate.map((c) => `- ${c}`).join("\n")
+      + "\n"
+    : "";
+  return card.body + gateBlock;
+}
+
 function main() {
   console.log(`看板：${BOARD}`);
   console.log(`工作区：dir:${REPO}`);
   console.log(`模式：${dryRun ? "DRY-RUN（不创建）" : "实际创建"}\n`);
 
-  // 幂等检查
+  // 幂等检查：忽略已归档任务
   const existing = runCapture(["kanban", "--board", BOARD, "list", "--json"]);
-  if (existing.status === 0) {
-    const trimmed = existing.out.trim();
-    const isEmpty = trimmed === "" || trimmed === "[]" || trimmed === "{}";
-    if (!isEmpty) {
-      console.error(`✗ 看板 ${BOARD} 已存在任务，拒绝重复创建。`);
-      console.error(`  如需重建，请先归档现有任务：hermes kanban --board ${BOARD} archive <id>`);
-      process.exit(1);
-    }
-    console.log("✓ 看板为空，可以创建\n");
-  } else {
+  if (existing.status !== 0) {
     console.error(`✗ 无法读取看板 ${BOARD}：${existing.err}`);
     process.exit(1);
   }
+  const activeCount = countActiveTasks(existing.out);
+  if (activeCount > 0) {
+    console.error(`✗ 看板 ${BOARD} 已有 ${activeCount} 个活动任务，拒绝重复创建。`);
+    console.error(`  如需重建，请先归档：hermes kanban --board ${BOARD} archive <id> ...`);
+    process.exit(1);
+  }
+  console.log("✓ 看板无活动任务，可以创建\n");
 
   const created = {};
   for (const card of CARDS) {
     const parentArgs = card.parents.flatMap((p) => ["--parent", created[p]]);
     console.log(`── ${card.key}  ${card.title}`);
-    console.log(`   负责人: ${card.assignee}   优先级: ${card.priority}`);
+    console.log(`   负责人: ${card.assignee}   优先级: ${card.priority}   验收命令: ${(card.gate ?? []).length} 条`);
     if (card.parents.length) {
       console.log(`   依赖: ${card.parents.map((p) => `${p}=${created[p]}`).join(", ")}`);
     }
@@ -505,14 +577,14 @@ function main() {
       continue;
     }
 
-    const args = [
+    const out = run([
       "kanban",
       "--board",
       BOARD,
       "create",
       card.title,
       "--body",
-      card.body,
+      buildBody(card),
       "--assignee",
       card.assignee,
       "--priority",
@@ -520,24 +592,19 @@ function main() {
       "--workspace",
       `dir:${REPO}`,
       ...parentArgs,
-    ];
-    const out = run(args);
+    ]);
     const idMatch = out.match(/t_[0-9a-f]+/);
     created[card.key] = idMatch ? idMatch[0] : "(未解析到 id)";
-    console.log(`   创建成功: ${created[card.key]}`);
-    console.log(`   ${out.split("\n")[0]}\n`);
+    console.log(`   创建成功: ${created[card.key]}\n`);
   }
 
   console.log("═══════════════════════════════════════");
   console.log("任务 ID 映射：");
-  for (const [k, v] of Object.entries(created)) {
-    console.log(`  ${k}  →  ${v}`);
-  }
+  for (const [k, v] of Object.entries(created)) console.log(`  ${k}  →  ${v}`);
 
   if (!dryRun) {
     console.log("\n看板当前状态：");
-    const list = runCapture(["kanban", "--board", BOARD, "list"]);
-    console.log(list.out);
+    console.log(runCapture(["kanban", "--board", BOARD, "list"]).out);
   }
 }
 
